@@ -70,7 +70,7 @@ func trimLeft(a []bin, maxBucketCap int) []bin {
 		nRemove = len(a) - maxBucketCap
 
 		missing  int
-		overflow []bin
+		overflow []bin = make([]bin, 0, nRemove)
 	)
 
 	// TODO|PROD: Benchmark a better overflow scheme.

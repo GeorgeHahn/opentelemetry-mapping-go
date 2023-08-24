@@ -48,6 +48,19 @@ func (a *Agent) flush() {
 	}
 }
 
+// flush buffered values into the sketch.
+func (a *Agent) flushBatch() {
+	if len(a.Buf) >= 10 {
+		a.Sketch.insert(agentConfig, a.Buf)
+		a.Buf = nil
+	}
+
+	if len(a.CountBuf) >= 10 {
+		a.Sketch.insertCounts(agentConfig, a.CountBuf)
+		a.CountBuf = nil
+	}
+}
+
 // Reset the agent sketch to the empty state.
 func (a *Agent) Reset() {
 	a.Sketch.Reset()
@@ -79,7 +92,7 @@ func (a *Agent) Insert(v float64, sampleRate float64) {
 		}
 		a.CountBuf = append(a.CountBuf, kc)
 	}
-	a.flush()
+	a.flushBatch()
 }
 
 // InsertInterpolate linearly interpolates a count from the given lower to upper bounds

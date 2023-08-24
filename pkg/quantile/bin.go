@@ -20,7 +20,7 @@ type bin struct {
 }
 
 // incrSafe performs `b.n += by` safely handling overflows. When an overflow
-// occurs, we set b.n to it's max, and return the leftover amount to increment.
+// occurs, we set b.n to its max, and return the leftover amount to increment.
 func (b *bin) incrSafe(by int) int {
 	next := by + int(b.n)
 
@@ -57,6 +57,43 @@ func appendSafe(bins []bin, k Key, n int) []bin {
 	}
 
 	return bins
+}
+
+// appendSafe appends 1 or more bins with the given key safely handing overflow by
+// inserting multiple buckets when needed.
+//
+//	(1) n <= maxBinWidth :  1 bin
+//	(2) n > maxBinWidth  : >1 bin
+func appendSafeInPlace(bins *[]bin, idx *int, k Key, n int) {
+	if n <= maxBinWidth {
+		if len(*bins) == *idx {
+			*bins = append(*bins, bin{})
+		}
+		(*bins)[*idx] = bin{k: k, n: uint16(n)}
+		(*idx)++
+		return
+	}
+
+	// on overflow, insert multiple bins with the same key.
+	// put full bins at end
+
+	// TODO|PROD: Add validation func that sorts by key and then n (smaller bin first).
+	r := uint16(n % maxBinWidth)
+	if r != 0 {
+		if len(*bins) == *idx {
+			*bins = append(*bins, bin{})
+		}
+		(*bins)[*idx] = bin{k: k, n: r}
+		(*idx)++
+	}
+
+	for i := 0; i < n/maxBinWidth; i++ {
+		if len(*bins) == *idx {
+			*bins = append(*bins, bin{})
+		}
+		(*bins)[*idx] = bin{k: k, n: maxBinWidth}
+		(*idx)++
+	}
 }
 
 type binList []bin

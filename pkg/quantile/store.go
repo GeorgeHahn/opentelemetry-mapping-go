@@ -69,8 +69,8 @@ func trimLeft(a []bin, maxBucketCap int) []bin {
 	var (
 		nRemove = len(a) - maxBucketCap
 
-		missing  int
-		overflow = getOverflowList()
+		missing int
+		idx     = 0
 	)
 
 	// TODO|PROD: Benchmark a better overflow scheme.
@@ -86,10 +86,11 @@ func trimLeft(a []bin, maxBucketCap int) []bin {
 		missing += int(a[i].n)
 
 		if missing > maxBinWidth {
-			overflow = append(overflow, bin{
+			a[idx] = bin{
 				k: a[i].k,
 				n: maxBinWidth,
-			})
+			}
+			idx++
 
 			missing -= maxBinWidth
 		}
@@ -97,16 +98,14 @@ func trimLeft(a []bin, maxBucketCap int) []bin {
 
 	missing = a[nRemove].incrSafe(missing)
 	if missing > 0 {
-		overflow = appendSafe(overflow, a[nRemove].k, missing)
+		appendSafeInPlace(&a, &idx, a[nRemove].k, missing)
 	}
 
-	overflowLen := len(overflow)
+	if idx != nRemove {
+		copy(a[idx:], a[nRemove:])
+	}
 
-	copy(a, overflow)
-	copy(a[overflowLen:], a[nRemove:])
-	putOverflowList(overflow)
-
-	return a[:maxBucketCap+overflowLen]
+	return a[:maxBucketCap+idx]
 }
 
 func (s *sparseStore) merge(c *Config, o *sparseStore) {

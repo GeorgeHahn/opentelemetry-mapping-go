@@ -190,8 +190,8 @@ func (s *sparseStore) insertCounts(c *Config, kcs []KeyCount) {
 
 	tmp = trimLeft(tmp, c.binLimit)
 
-	// TODO|PERF: reallocate if cap(s.bins) >> len(s.bins)
-	s.bins = s.bins.ensureLen(len(tmp))
+	// TODO|PERF: only reallocate if len(tmp) >> cap(s.bins)
+	s.bins = make(binList, len(tmp))
 	copy(s.bins, tmp)
 	putBinList(tmp)
 }
